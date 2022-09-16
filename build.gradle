@@ -1,0 +1,46 @@
+plugins {
+    id 'java'
+    id "com.github.johnrengelman.shadow" version "7.1.2"
+}
+
+group 'dev.imabad.mceventsuite'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+
+    if(System.getenv("GITHUB_USERNAME") != null || project.findProperty("gpr.user") != null){
+        maven {
+            url = uri("https://maven.pkg.github.com/MCEventSuite/EventCore")
+            credentials {
+                username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_USERNAME")
+                password = project.findProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
+            }
+        }
+    }
+}
+
+dependencies {
+    implementation 'dev.imabad.mceventsuite:eventcore:1.0-SNAPSHOT'
+    implementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.18.0'
+
+    compileOnly 'org.projectlombok:lombok:1.18.24'
+    annotationProcessor 'org.projectlombok:lombok:1.18.24'
+
+    testCompileOnly 'org.projectlombok:lombok:1.18.24'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.24'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+}
+
+jar {
+    manifest {
+        attributes "Main-Class": "dev.imabad.mceventsuite.bot.EventBot"
+    }
+}
+
+test {
+    useJUnitPlatform()
+}
