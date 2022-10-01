@@ -2,6 +2,7 @@ package dev.imabad.mceventsuite.bot.modules.meet;
 
 import dev.imabad.mceventsuite.core.modules.redis.RedisModule;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.util.UUID;
 
@@ -14,6 +15,7 @@ public class GreetSpot {
     private double z;
 
     private UUID currentUser;
+    @Setter
     private UUID pastUser;
     private long timeReached;
 

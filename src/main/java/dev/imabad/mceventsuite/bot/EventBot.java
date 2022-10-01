@@ -7,6 +7,7 @@ import dev.imabad.mceventsuite.core.modules.redis.RedisModule;
 import dev.imabad.mceventsuite.core.modules.redis.events.RedisConnectionEvent;
 
 import java.io.File;
+import java.util.Arrays;
 
 public class EventBot {
     public static void main(String[] args) {
