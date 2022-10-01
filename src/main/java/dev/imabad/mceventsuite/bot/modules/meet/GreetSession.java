@@ -6,6 +6,7 @@ import dev.imabad.mceventsuite.core.modules.redis.messages.meet.PlayerMoveQueueM
 import dev.imabad.mceventsuite.core.modules.redis.messages.meet.ServerAnnounceMeetState;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -13,6 +14,7 @@ import java.util.Queue;
 import java.util.UUID;
 
 @Getter
+@Slf4j
 public class GreetSession {
     private final RedisModule redisModule;
 
@@ -58,27 +60,36 @@ public class GreetSession {
     public void progressQueue() {
         for(int i = 0; i < this.greetSpots.size(); i++) {
             final GreetSpot current = this.greetSpots.get(i);
+            log.info("I am Spot {}, current is {} and past is {}", i, current.getCurrentUser() == null ? "null" : current.getCurrentUser(),
+                    current.getPastUser() == null ? "null" : current.getPastUser());
 
             if(i == 0) {
                 current.updateCurrentUser(this.playersInQueue.poll());
                 if(current.getCurrentUser() != null) {
+                    log.info("GreetSpot {} updated with user {}", i, current.getCurrentUser());
                     redisModule.publishMessage(RedisChannel.GLOBAL,
                             new PlayerMoveQueueMessage(name, current.getCurrentUser(), false, i + 1, this.meetTime,
                                     new PlayerMoveQueueMessage.Location(current.getX(), current.getY(), current.getZ())));
+                } else {
+                    log.info("GreetSpot {} updated with null!", i);
                 }
             }
 
             if(this.greetSpots.size() > i+1) {
                 final GreetSpot next = this.greetSpots.get(i + 1);
                 next.updateCurrentUser(current.getPastUser());
+                log.info("Updating Greet Spot {} with user {}", i+1, current.getPastUser() == null ? "null" : current.getPastUser());
                 if(current.getPastUser() != null) {
                     redisModule.publishMessage(RedisChannel.GLOBAL,
                             new PlayerMoveQueueMessage(name, current.getPastUser(), false, i + 2, this.meetTime,
                                     new PlayerMoveQueueMessage.Location(next.getX(), next.getY(), next.getZ())));
+                    current.setPastUser(null);
                 }
             } else if(current.getPastUser() != null) {
+                log.info("Kicking {} from the queue, as they are at the end.", current.getPastUser());
                 redisModule.publishMessage(RedisChannel.GLOBAL,
                         new PlayerMoveQueueMessage(name, current.getPastUser(), false, -1, 0, null));
+                current.setPastUser(null);
             }
         }
 
