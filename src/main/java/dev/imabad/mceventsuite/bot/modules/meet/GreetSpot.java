@@ -17,6 +17,7 @@ public class GreetSpot {
     private UUID currentUser;
     @Setter
     private UUID pastUser;
+    @Setter
     private long timeReached;
 
     public GreetSpot(RedisModule redisModule, double x, double y, double z){
@@ -33,5 +34,10 @@ public class GreetSpot {
         this.currentUser = uuid;
         if(uuid != null)
             this.timeReached = System.currentTimeMillis();
+    }
+
+    public void kickCurrentUser() {
+        this.currentUser = null;
+        this.pastUser = null;
     }
 }
