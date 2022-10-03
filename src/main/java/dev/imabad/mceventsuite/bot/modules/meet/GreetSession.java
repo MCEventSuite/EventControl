@@ -136,8 +136,8 @@ public class GreetSession {
         }
 
         for (GreetSpot greetSpot : this.greetSpots) {
-            if (greetSpot.getCurrentUser() == uuid) {
-                greetSpot.updateCurrentUser(null);
+            if (greetSpot.getCurrentUser().equals(uuid)) {
+                greetSpot.kickCurrentUser();
                 return true;
             }
         }

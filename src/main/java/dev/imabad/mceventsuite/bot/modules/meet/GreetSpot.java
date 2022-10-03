@@ -35,4 +35,9 @@ public class GreetSpot {
         if(uuid != null)
             this.timeReached = System.currentTimeMillis();
     }
+
+    public void kickCurrentUser() {
+        this.currentUser = null;
+        this.pastUser = null;
+    }
 }
