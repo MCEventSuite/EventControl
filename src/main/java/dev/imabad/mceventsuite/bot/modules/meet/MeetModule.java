@@ -46,6 +46,9 @@ public class MeetModule extends Module {
                     request.getMeetTime(),
                     request.getSessionTime());
             this.sessionMap.put(request.getName(), greetSession);
+
+            this.redisModule.publishMessage(RedisChannel.GLOBAL, new ServerAnnounceDisplayNames(generateDisplayNames()));
+
             log.info("New session {} with display name of {}", request.getName(), request.getDisplayName());
             return new BooleanResponse(true);
         }));
@@ -117,10 +120,42 @@ public class MeetModule extends Module {
             }
         }));
 
+        this.redisModule.registerRequestListener(AdminPauseSessionRequest.class, new RedisRequestListener<>((msg) -> {
+           final GreetSession session = this.sessionMap.get(msg.getName());
+           if(session == null)
+               return new BooleanResponse(false);
+
+           if(msg.isResume()) {
+               if(session.getPauseTime() != 0)
+                   return new BooleanResponse(false);
+               session.resume();
+           } else {
+               if (session.getPauseTime() != 0)
+                   return new BooleanResponse(false);
+               session.pause();
+           }
+
+           return new BooleanResponse(true);
+        }));
+
+        this.redisModule.registerRequestListener(AdminExtendTimeRequest.class, new RedisRequestListener<>((msg) -> {
+            GreetSession session = this.sessionMap.get(msg.getName());
+            if(session == null)
+                return new BooleanResponse(false);
+
+            if(msg.isSession())
+                session.updateSessionTime(msg.getTime());
+            else
+                session.updateMeetTime(msg.getTime());
+            return new BooleanResponse(true);
+        }));
+
         executorService.scheduleWithFixedDelay(() -> {
             final long currentTime = System.currentTimeMillis();
             for(final GreetSession session : this.sessionMap.values()) {
                 if(session.getEndsTime() <= 0)
+                    continue;
+                if(session.getPauseTime() != 0)
                     continue;
                 if(System.currentTimeMillis() > session.getEndsTime()) {
                     this.redisModule.publishMessage(RedisChannel.GLOBAL,
@@ -156,8 +191,6 @@ public class MeetModule extends Module {
                             }
                             this.redisModule.publishMessage(RedisChannel.GLOBAL,
                                     new PlayerTimeReminderMessage(greetSpot.getCurrentUser(), timeString));
-                        } else {
-                            System.out.println(seconds);
                         }
                     }
                 }
@@ -168,6 +201,14 @@ public class MeetModule extends Module {
     @Override
     public void onDisable() {
 
+    }
+
+    public HashMap<String, String> generateDisplayNames() {
+        HashMap<String, String> map = new HashMap<>();
+        for(GreetSession session : this.sessionMap.values()) {
+            map.put(session.getName(), session.getDisplayName());
+        }
+        return map;
     }
 
     @Override

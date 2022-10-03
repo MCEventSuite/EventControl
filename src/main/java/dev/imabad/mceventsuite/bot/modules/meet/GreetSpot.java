@@ -17,6 +17,7 @@ public class GreetSpot {
     private UUID currentUser;
     @Setter
     private UUID pastUser;
+    @Setter
     private long timeReached;
 
     public GreetSpot(RedisModule redisModule, double x, double y, double z){
