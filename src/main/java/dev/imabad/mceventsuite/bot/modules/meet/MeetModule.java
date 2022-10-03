@@ -129,6 +129,8 @@ public class MeetModule extends Module {
                if(session.getPauseTime() != 0)
                    return new BooleanResponse(false);
                session.resume();
+               this.redisModule.publishMessage(RedisChannel.GLOBAL, new ServerAnnounceMeetTime(session.getName(),
+                       session.getStartTime(), session.getEndsTime()));
            } else {
                if (session.getPauseTime() != 0)
                    return new BooleanResponse(false);
@@ -143,10 +145,13 @@ public class MeetModule extends Module {
             if(session == null)
                 return new BooleanResponse(false);
 
-            if(msg.isSession())
+            if(msg.isSession()) {
                 session.updateSessionTime(msg.getTime());
-            else
+                this.redisModule.publishMessage(RedisChannel.GLOBAL, new ServerAnnounceMeetTime(session.getName(),
+                        session.getStartTime(), session.getEndsTime()));
+            } else {
                 session.updateMeetTime(msg.getTime());
+            }
             return new BooleanResponse(true);
         }));
 
